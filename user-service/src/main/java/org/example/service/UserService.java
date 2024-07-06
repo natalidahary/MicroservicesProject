@@ -16,6 +16,7 @@ import org.example.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -72,6 +73,36 @@ public class UserService {
             throw e;
         } catch (Exception e) {
             log.error("Error updating preferences for user ID: {}", preferencesRequest.userId(), e);
+            throw e;
+        }
+    }
+
+    public List<UserResponse> getAllUsers() {
+        log.info("Fetching all users.");
+        try {
+            List<User> users = userRepository.findAll();
+            log.info("Fetched {} users.", users.size());
+            return users.stream()
+                    .map(user -> new UserResponse(user.getId(), user.getEmail(), user.getPreferences()))
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("Error fetching all users", e);
+            throw e;
+        }
+    }
+
+    public void deleteUserById(String userId) {
+        log.info("Deleting user with ID: {}", userId);
+        try {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
+            userRepository.delete(user);
+            log.info("User deleted successfully with ID: {}", userId);
+        } catch (UserNotFoundException e) {
+            log.warn("User not found with ID: {}", userId, e);
+            throw e;
+        } catch (Exception e) {
+            log.error("Error deleting user with ID: {}", userId, e);
             throw e;
         }
     }
