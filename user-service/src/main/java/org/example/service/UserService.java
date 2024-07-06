@@ -1,5 +1,9 @@
 package org.example.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.dapr.client.DaprClient;
+import io.dapr.client.DaprClientBuilder;
+import io.dapr.client.domain.HttpExtension;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +22,8 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final DaprClient daprClient = new DaprClientBuilder().build();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @PostConstruct
     public void init() {
@@ -45,5 +51,14 @@ public class UserService {
         user.setPreferences(preferencesRequest.preferences());
         userRepository.save(user);
         return new UserResponse(user.getId(), user.getEmail(), user.getPreferences());
+    }
+
+    public void invokeOtherService(String serviceId, String methodName, Object request) {
+        try {
+            byte[] requestData = objectMapper.writeValueAsBytes(request);
+            daprClient.invokeMethod(serviceId, methodName, requestData, HttpExtension.POST, byte[].class).block();
+        } catch (Exception e) {
+            log.error("Error invoking service", e);
+        }
     }
 }
