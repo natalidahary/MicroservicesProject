@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    networks:
+      - newsnet
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
+  mongodb:
+    image: mongo:7.0.11
+    container_name: mongodb-user
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=password
+      - MONGO_INITDB_DATABASE=user_service
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - newsnet
+
+networks:
+  newsnet:
+
+volumes:
+  mongodb_data:
