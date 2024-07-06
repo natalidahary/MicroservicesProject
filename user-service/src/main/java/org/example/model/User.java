@@ -1,6 +1,5 @@
 package org.example.model;
 
-import jakarta.persistence.ElementCollection;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,7 +18,6 @@ public class User {
     @Id
     private String id;
     private String email;
-    @ElementCollection
     private List<String> preferences;
 
 }
