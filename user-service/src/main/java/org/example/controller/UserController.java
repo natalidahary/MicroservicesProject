@@ -10,6 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
@@ -27,6 +29,18 @@ public class UserController {
     public ResponseEntity<UserResponse> updatePreferences(@RequestBody PreferencesRequest preferencesRequest) {
         UserResponse userResponse = userService.updatePreferences(preferencesRequest);
         return new ResponseEntity<>(userResponse, HttpStatus.OK);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<UserResponse>> getAllUsers() {
+        List<UserResponse> users = userService.getAllUsers();
+        return new ResponseEntity<>(users, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<Void> deleteUserById(@PathVariable String userId) {
+        userService.deleteUserById(userId);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
 }

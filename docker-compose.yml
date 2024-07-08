@@ -8,6 +8,7 @@ services:
       - "27017:27017"
     volumes:
       - mongo-data:/data/db
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
 
   user-service:
     build:
@@ -20,6 +21,9 @@ services:
     depends_on:
       - mongo
     command: ["sh", "-c", "dapr run --app-id user-service --app-port 8081 --dapr-http-port 3500 --components-path /dapr/components -- java -jar /user-service.jar"]
+      - SPRING_DATA_MONGODB_URI=mongodb://root:password@mongo:27017/users?authSource=admin
+    depends_on:
+      - mongo
 
   news-service:
     build:
@@ -65,6 +69,51 @@ volumes:
 #version: '3.8'
 #
 #services:
+#  # user service - MongoDB
+#  mongodb:
+#    image: mongo:latest
+#    container_name: mongodb-user
+#    ports:
+#      - "27017:27017"
+#    environment:
+#      MONGO_INITDB_ROOT_USERNAME: root
+#      MONGO_INITDB_ROOT_PASSWORD: password
+#      MONGO_INITDB_DATABASE: user_service
+#    volumes:
+#      - mongodb_data:/data/db
+#    networks:
+#      - microservicesproject_mynetwork
+#
+#
+#volumes:
+#  mongodb_data:
+#
+#networks:
+#  microservicesproject_mynetwork:
+#    external: true
+
+#
+#services:
+#  ########################
+#  # MongoDB Service
+#  ########################
+#  mongodb:
+#    image: mongo:latest
+#    container_name: mongodb-user
+#    ports:
+#      - "27017:27017"
+#    environment:
+#      - MONGO_INITDB_ROOT_USERNAME=root
+#      - MONGO_INITDB_ROOT_PASSWORD=password
+#      - MONGO_INITDB_DATABASE=user_service
+#    volumes:
+#      - mongodb_data:/data/db
+#    networks:
+#      - microservicesproject_mynetwork
+#
+#  ########################
+#  # Spring Boot App Service
+#  ########################
 #  user-service:
 #    build:
 #      context: ./user-service
@@ -81,6 +130,64 @@ volumes:
 #    container_name: mongodb-user
 #    ports:
 #      - "27017:27017"
+#    container_name: user-service
+#    ports:
+#      - 8081:8080
+#    environment:
+#      - SPRING_PROFILES_ACTIVE=docker
+#      - SPRING_DATA_MONGODB_URI=mongodb://root:password@mongodb-user:27017/user_service?authSource=admin
+#    depends_on:
+#      - mongodb
+#    networks:
+#      - microservicesproject_mynetwork
+#
+#  ########################
+#  # Dapr Sidecar for Spring Boot App
+#  ########################
+#  user-service-dapr:
+#    image: "daprio/daprd:edge"
+#    deploy:
+#      restart_policy:
+#        condition: on-failure
+#        delay: 5s
+#        max_attempts: 10
+#        window: 120s
+#    command: ["./daprd",
+#              "-app-id", "user-service",
+#              "-app-port", "8080",
+#              "-app-protocol", "http",
+#              "-dapr-http-port", "3500",
+#              "-resources-path", "./dapr/components",
+#              "-config", "./dapr/config.yaml"
+#    ]
+#    volumes:
+#      - "./dapr/:/dapr"
+#    depends_on:
+#      - user-service
+#    networks:
+#      - microservicesproject_mynetwork
+#    ports:
+#      - 3500:3500
+#
+#volumes:
+#  mongodb_data:
+#
+#networks:
+#  microservicesproject_mynetwork:
+#    external: true
+
+
+
+
+#services:
+#  ########################
+#  # MongoDB Service
+#  ########################
+#  mymongodb:
+#    image: mongo:latest
+#    container_name: mymongodb
+#    ports:
+#      - 27017:27017
 #    environment:
 #      - MONGO_INITDB_ROOT_USERNAME=root
 #      - MONGO_INITDB_ROOT_PASSWORD=password
@@ -95,3 +202,57 @@ volumes:
 #
 #volumes:
 #  mongodb_data:
+#      - ./mongo-data:/data/db
+#    networks:
+#      - microservicesproject_mynetwork
+#
+#  ########################
+#  # Spring Boot App Service
+#  ########################
+#  springboot-mongodb:
+#    build:
+#      context: ./user-service
+#      dockerfile: Dockerfile
+#    container_name: springboot-mongodb
+#    ports:
+#      - 8081:8080
+#    environment:
+#      - SPRING_PROFILES_ACTIVE=docker
+#      - SPRING_DATA_MONGODB_URI=mongodb://root:password@mymongodb:27017/user_service?authSource=admin
+#    depends_on:
+#      - mymongodb
+#    networks:
+#      - microservicesproject_mynetwork
+#
+#  ########################
+#  # Dapr Sidecar for Spring Boot App
+#  ########################
+#  springboot-mongodb-dapr:
+#    image: "daprio/daprd:edge"
+#    deploy:
+#      restart_policy:
+#        condition: on-failure
+#        delay: 5s
+#        max_attempts: 10
+#        window: 120s
+#    command: ["./daprd",
+#              "-app-port", "8080",
+#              "-app-id", "springboot-mongodb",
+#              "-app-protocol", "http",
+#              "-dapr-http-port", "3500",
+#              "-resources-path", "./dapr/components",
+#              "-config", "./dapr/config.yaml"
+#    ]
+#    volumes:
+#      - "./dapr/:/dapr"
+#    depends_on:
+#      - springboot-mongodb
+#    networks:
+#      - microservicesproject_mynetwork
+#    ports:
+#      - 3500:3500
+#
+#networks:
+#  microservicesproject_mynetwork:
+#    external: true
+
