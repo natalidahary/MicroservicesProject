@@ -22,7 +22,7 @@ public class NewsController {
 
     @PostMapping("/fetch")
     public ResponseEntity<String> fetchNews(@RequestBody NewsRequest newsRequest) {
-        newsService.fetchNews(newsRequest.preferences());
+        newsService.fetchNews(newsRequest);
         return new ResponseEntity<>("Request accepted", HttpStatus.ACCEPTED);
     }
 }
