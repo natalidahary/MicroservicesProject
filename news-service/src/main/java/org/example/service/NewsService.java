@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.dto.GeminiResponse;
 import org.example.dto.NewsDataResponse;
 import org.example.model.News;
+import org.example.dto.NewsRequest;
 import org.example.repository.NewsRepository;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
