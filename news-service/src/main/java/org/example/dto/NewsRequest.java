@@ -1,4 +1,6 @@
 package org.example.dto;
 
-public record NewsRequest(String userId) {
+import java.util.List;
+
+public record NewsRequest(List<String> preferences, String userId) {
 }
