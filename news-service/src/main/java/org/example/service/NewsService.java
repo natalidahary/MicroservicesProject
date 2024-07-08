@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.dto.GeminiResponse;
 import org.example.dto.NewsDataResponse;
-import org.example.dto.NewsRequest;
 import org.example.model.News;
 import org.example.repository.NewsRepository;
 import org.springframework.http.HttpEntity;
@@ -28,7 +27,7 @@ public class NewsService {
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Async
-    public void fetchNews(NewsRequest newsRequest) {
+    public void fetchNews(List<String> newsRequest) {
         log.info("Fetching news for preferences: {}", newsRequest.preferences());
 
         for (String category : newsRequest.preferences()) {
