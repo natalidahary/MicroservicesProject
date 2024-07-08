@@ -68,7 +68,7 @@ public class NewsService {
 
     private String generateSummary(String content) {
         // Implement the API call to Gemini AI API to summarize the content
-        // Example API call (replace with actual implementation):
+        // Example API call (replace with actual implementation)://
         String url = "https://api.gemini.ai/summarize";
         HttpHeaders headers = new HttpHeaders();
         headers.set("Content-Type", "application/json");
