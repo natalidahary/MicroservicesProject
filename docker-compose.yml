@@ -9,7 +9,6 @@ services:
     volumes:
       - mongo-data:/data/db
       - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
-
   user-service:
     build:
       context: ./user-service
