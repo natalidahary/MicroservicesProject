@@ -23,9 +23,6 @@ services:
     depends_on:
       - mongo
     command: ["sh", "-c", "dapr run --app-id user-service --app-port 8081 --dapr-http-port 3500 --components-path /dapr/components -- java -jar /user-service.jar"]
-      - SPRING_DATA_MONGODB_URI=mongodb://root:password@mongo:27017/users?authSource=admin
-    depends_on:
-      - mongo
 
   ## news-service - dapr ##
   news-service:
