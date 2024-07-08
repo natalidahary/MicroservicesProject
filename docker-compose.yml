@@ -1,28 +1,85 @@
 version: '3.8'
 
 services:
-  # user service - MongoDB
-  mongodb:
+  mongo:
     image: mongo:latest
-    container_name: mongodb-user
+    container_name: mongo
     ports:
       - "27017:27017"
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: password
-      MONGO_INITDB_DATABASE: user_service
     volumes:
-      - mongodb_data:/data/db
-    networks:
-      - microservicesproject_mynetwork
+      - mongo-data:/data/db
 
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://mongo:27017/users
+    depends_on:
+      - mongo
+
+  news-service:
+    build:
+      context: ./news-service
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+    depends_on:
+      - mongo
+
+  notification-service:
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_MAIL_HOST=smtp.example.com
+      - SPRING_MAIL_PORT=587
+      - SPRING_MAIL_USERNAME=your_email@example.com
+      - SPRING_MAIL_PASSWORD=your_email_password
+    depends_on:
+      - mongo
+
+#  api-gateway:
+#    build:
+#      context: ./api-gateway
+#      dockerfile: Dockerfile
+#    ports:
+#      - "8080:8080"
+#    depends_on:
+#      - user-service
+#      - news-service
+#      - notification-service
 
 volumes:
-  mongodb_data:
+  mongo-data:
 
-networks:
-  microservicesproject_mynetwork:
-    external: true
+#services:
+#  # user service - MongoDB
+#  mongodb:
+#    image: mongo:latest
+#    container_name: mongodb-user
+#    ports:
+#      - "27017:27017"
+#    environment:
+#      MONGO_INITDB_ROOT_USERNAME: root
+#      MONGO_INITDB_ROOT_PASSWORD: password
+#      MONGO_INITDB_DATABASE: user_service
+#    volumes:
+#      - mongodb_data:/data/db
+#    networks:
+#      - microservicesproject_mynetwork
+#
+#
+#volumes:
+#  mongodb_data:
+#
+#networks:
+#  microservicesproject_mynetwork:
+#    external: true
 
 #
 #services:
