@@ -1,33 +1,97 @@
 version: '3.8'
 
 services:
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
   user-service:
     build:
       context: ./user-service
       dockerfile: Dockerfile
     ports:
       - "8081:8081"
-    networks:
-      - newsnet
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATA_MONGODB_URI=mongodb://mongo:27017/users
+    depends_on:
+      - mongo
+    command: ["sh", "-c", "dapr run --app-id user-service --app-port 8081 --dapr-http-port 3500 --components-path /dapr/components -- java -jar /user-service.jar"]
 
-  mongodb:
-    image: mongo:7.0.11
-    container_name: mongodb-user
+  news-service:
+    build:
+      context: ./news-service
+      dockerfile: Dockerfile
     ports:
-      - "27017:27017"
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=password
-      - MONGO_INITDB_DATABASE=user_service
-    volumes:
-      - mongodb_data:/data/db
-    networks:
-      - newsnet
+      - "8082:8082"
+    depends_on:
+      - mongo
+    command: ["sh", "-c", "dapr run --app-id news-service --app-port 8082 --dapr-http-port 3501 --components-path /dapr/components -- java -jar /news-service.jar"]
 
-networks:
-  newsnet:
+  notification-service:
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_MAIL_HOST=smtp.example.com
+      - SPRING_MAIL_PORT=587
+      - SPRING_MAIL_USERNAME=your_email@example.com
+      - SPRING_MAIL_PASSWORD=your_email_password
+    depends_on:
+      - mongo
+    command: ["sh", "-c", "dapr run --app-id notification-service --app-port 8083 --dapr-http-port 3502 --components-path /dapr/components -- java -jar /notification-service.jar"]
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - user-service
+      - news-service
+      - notification-service
+    command: ["sh", "-c", "dapr run --app-id api-gateway --app-port 8080 --dapr-http-port 3503 --components-path /dapr/components -- java -jar /api-gateway.jar"]
 
 volumes:
-  mongodb_data:
+  mongo-data:
+
+
+#version: '3.8'
+#
+#services:
+#  user-service:
+#    build:
+#      context: ./user-service
+#      dockerfile: Dockerfile
+#    ports:
+#      - "8081:8081"
+#    networks:
+#      - newsnet
+#    environment:
+#      - SPRING_PROFILES_ACTIVE=docker
+#
+#  mongodb:
+#    image: mongo:7.0.11
+#    container_name: mongodb-user
+#    ports:
+#      - "27017:27017"
+#    environment:
+#      - MONGO_INITDB_ROOT_USERNAME=root
+#      - MONGO_INITDB_ROOT_PASSWORD=password
+#      - MONGO_INITDB_DATABASE=user_service
+#    volumes:
+#      - mongodb_data:/data/db
+#    networks:
+#      - newsnet
+#
+#networks:
+#  newsnet:
+#
+#volumes:
+#  mongodb_data:
