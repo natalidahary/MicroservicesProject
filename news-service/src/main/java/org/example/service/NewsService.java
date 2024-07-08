@@ -28,7 +28,7 @@ public class NewsService {
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Async
-    public void fetchNews(List<String> newsRequest) {
+    public void fetchNews(NewsRequest newsRequest) {
         log.info("Fetching news for preferences: {}", newsRequest.preferences());
 
         for (String category : newsRequest.preferences()) {
