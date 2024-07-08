@@ -5,9 +5,17 @@
     <option name="originalFiles">
       <list>
         <option value="$PROJECT_DIR$/user-service/pom.xml" />
+<<<<<<< HEAD
+        <option value="$PROJECT_DIR$/news-service/pom.xml" />
+        <option value="$PROJECT_DIR$/notification-service/pom.xml" />
+=======
         <option value="$PROJECT_DIR$/../news-service/pom.xml" />
         <option value="$PROJECT_DIR$/../notification-service/pom.xml" />
+<<<<<<< HEAD
         <option value="$PROJECT_DIR$/news-service/pom.xml" />
+=======
+>>>>>>> main
+>>>>>>> a550f11aa5305093bcac1fd69d53b4adaef04283
       </list>
     </option>
   </component>
