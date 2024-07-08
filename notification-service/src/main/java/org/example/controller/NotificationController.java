@@ -1,5 +1,6 @@
 package org.example.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.example.dto.NotificationRequest;
 import org.example.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,14 +13,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/notifications")
+@RequiredArgsConstructor
 public class NotificationController {
 
     @Autowired
     private NotificationService notificationService;
 
     @PostMapping("/send")
-    public ResponseEntity<Void> sendNotification(@RequestBody NotificationRequest notificationRequest) {
+    public ResponseEntity<String> sendNotification(@RequestBody NotificationRequest notificationRequest) {
         notificationService.sendNotification(notificationRequest);
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>("Notification sent", HttpStatus.OK);
     }
 }
