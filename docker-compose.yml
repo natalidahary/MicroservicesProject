@@ -1,6 +1,7 @@
 version: '3.8'
 
 services:
+  ## mongodb - Database ##
   mongo:
     image: mongo:latest
     container_name: mongo
@@ -9,6 +10,7 @@ services:
     volumes:
       - mongo-data:/data/db
 
+  ## user-service - dapr ##
   user-service:
     build:
       context: ./user-service
@@ -21,6 +23,7 @@ services:
       - mongo
     command: ["sh", "-c", "dapr run --app-id user-service --app-port 8081 --dapr-http-port 3500 --components-path /dapr/components -- java -jar /user-service.jar"]
 
+  ## news-service - dapr ##
   news-service:
     build:
       context: ./news-service
@@ -31,6 +34,7 @@ services:
       - mongo
     command: ["sh", "-c", "dapr run --app-id news-service --app-port 8082 --dapr-http-port 3501 --components-path /dapr/components -- java -jar /news-service.jar"]
 
+  ## notification-service - dapr ##
   notification-service:
     build:
       context: ./notification-service
@@ -46,6 +50,7 @@ services:
       - mongo
     command: ["sh", "-c", "dapr run --app-id notification-service --app-port 8083 --dapr-http-port 3502 --components-path /dapr/components -- java -jar /notification-service.jar"]
 
+  ## apigateway - dapr ##
   api-gateway:
     build:
       context: ./api-gateway
