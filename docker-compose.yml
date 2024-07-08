@@ -9,6 +9,7 @@ services:
     volumes:
       - mongo-data:/data/db
       - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+
   user-service:
     build:
       context: ./user-service
@@ -16,6 +17,10 @@ services:
     ports:
       - "8081:8081"
     environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://mongo:27017/users
+    depends_on:
+      - mongo
+    command: ["sh", "-c", "dapr run --app-id user-service --app-port 8081 --dapr-http-port 3500 --components-path /dapr/components -- java -jar /user-service.jar"]
       - SPRING_DATA_MONGODB_URI=mongodb://root:password@mongo:27017/users?authSource=admin
     depends_on:
       - mongo
@@ -28,6 +33,7 @@ services:
       - "8082:8082"
     depends_on:
       - mongo
+    command: ["sh", "-c", "dapr run --app-id news-service --app-port 8082 --dapr-http-port 3501 --components-path /dapr/components -- java -jar /news-service.jar"]
 
   notification-service:
     build:
@@ -42,21 +48,26 @@ services:
       - SPRING_MAIL_PASSWORD=your_email_password
     depends_on:
       - mongo
+    command: ["sh", "-c", "dapr run --app-id notification-service --app-port 8083 --dapr-http-port 3502 --components-path /dapr/components -- java -jar /notification-service.jar"]
 
-#  api-gateway:
-#    build:
-#      context: ./api-gateway
-#      dockerfile: Dockerfile
-#    ports:
-#      - "8080:8080"
-#    depends_on:
-#      - user-service
-#      - news-service
-#      - notification-service
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - user-service
+      - news-service
+      - notification-service
+    command: ["sh", "-c", "dapr run --app-id api-gateway --app-port 8080 --dapr-http-port 3503 --components-path /dapr/components -- java -jar /api-gateway.jar"]
 
 volumes:
   mongo-data:
 
+
+#version: '3.8'
+#
 #services:
 #  # user service - MongoDB
 #  mongodb:
@@ -107,6 +118,18 @@ volumes:
 #    build:
 #      context: ./user-service
 #      dockerfile: Dockerfile
+#    ports:
+#      - "8081:8081"
+#    networks:
+#      - newsnet
+#    environment:
+#      - SPRING_PROFILES_ACTIVE=docker
+#
+#  mongodb:
+#    image: mongo:7.0.11
+#    container_name: mongodb-user
+#    ports:
+#      - "27017:27017"
 #    container_name: user-service
 #    ports:
 #      - 8081:8080
@@ -170,6 +193,15 @@ volumes:
 #      - MONGO_INITDB_ROOT_PASSWORD=password
 #      - MONGO_INITDB_DATABASE=user_service
 #    volumes:
+#      - mongodb_data:/data/db
+#    networks:
+#      - newsnet
+#
+#networks:
+#  newsnet:
+#
+#volumes:
+#  mongodb_data:
 #      - ./mongo-data:/data/db
 #    networks:
 #      - microservicesproject_mynetwork
@@ -223,3 +255,4 @@ volumes:
 #networks:
 #  microservicesproject_mynetwork:
 #    external: true
+
