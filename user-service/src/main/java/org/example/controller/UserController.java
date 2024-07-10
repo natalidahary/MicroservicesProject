@@ -43,4 +43,11 @@ public class UserController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+    @PostMapping("/invoke")
+    public ResponseEntity<Void> invokeOtherService(@RequestParam String serviceId, @RequestParam String methodName, @RequestBody Object request) {
+        userService.invokeOtherService(serviceId, methodName, request);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+
 }
