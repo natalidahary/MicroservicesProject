@@ -51,18 +51,19 @@ services:
       - mongo
     command: ["sh", "-c", "dapr run --app-id notification-service --app-port 8083 --dapr-http-port 3502 --components-path /dapr/components -- java -jar /notification-service.jar"]
 
-  ## apigateway - dapr ##
-  api-gateway:
-    build:
-      context: ./api-gateway
-      dockerfile: Dockerfile
-    ports:
-      - "8080:8080"
-    depends_on:
-      - user-service
-      - news-service
-      - notification-service
-    command: ["sh", "-c", "dapr run --app-id api-gateway --app-port 8080 --dapr-http-port 3503 --components-path /dapr/components -- java -jar /api-gateway.jar"]
+
+#  ## apigateway - dapr ##
+#  api-gateway:
+#    build:
+#      context: ./api-gateway
+#      dockerfile: Dockerfile
+#    ports:
+#      - "8080:8080"
+#    depends_on:
+#      - user-service
+#      - news-service
+#      - notification-service
+#    command: ["sh", "-c", "dapr run --app-id api-gateway --app-port 8080 --dapr-http-port 3503 --components-path /dapr/components -- java -jar /api-gateway.jar"]
 
 volumes:
   mongo-data:
