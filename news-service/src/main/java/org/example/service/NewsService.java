@@ -10,6 +10,7 @@ import org.example.dto.NewsDataResponse;
 import org.example.model.News;
 import org.example.dto.NewsRequest;
 import org.example.repository.NewsRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -32,12 +33,19 @@ public class NewsService {
     private final DaprClient daprClient = new DaprClientBuilder().build();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+
+    @Value("${newsdata.api.key}")
+    private String newsDataApiKey;
+
+    @Value("${gemini.api.key}")
+    private String geminiApiKey;
+
     @Async
     public void fetchNews(NewsRequest newsRequest) {
         log.info("Fetching news for preferences: {}", newsRequest.preferences());
 
         for (String category : newsRequest.preferences()) {
-            String url = "https://newsdata.io/api/1/news?apikey=YOUR_API_KEY&category=" + category;
+            String url = "https://newsdata.io/api/1/news?apikey=" + newsDataApiKey + "&category=" + category;
             NewsDataResponse response = restTemplate.getForObject(url, NewsDataResponse.class);
             if (response != null && response.results() != null) {
                 List<News> newsList = Arrays.stream(response.results())
@@ -78,7 +86,7 @@ public class NewsService {
         String url = "https://api.gemini.ai/summarize";
         HttpHeaders headers = new HttpHeaders();
         headers.set("Content-Type", "application/json");
-        headers.set("Authorization", "Bearer YOUR_GEMINI_API_KEY");
+        headers.set("Authorization", "Bearer " + geminiApiKey);
 
         String requestBody = "{\"content\":\"" + content + "\"}";
         HttpEntity<String> entity = new HttpEntity<>(requestBody, headers);
