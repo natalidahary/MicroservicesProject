@@ -1,5 +1,8 @@
 package org.example.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.dapr.client.DaprClient;
+import io.dapr.client.DaprClientBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.dto.GeminiResponse;
@@ -26,6 +29,8 @@ public class NewsService {
 
     private final NewsRepository newsRepository;
     private final RestTemplate restTemplate = new RestTemplate();
+    private final DaprClient daprClient = new DaprClientBuilder().build();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Async
     public void fetchNews(NewsRequest newsRequest) {
@@ -60,6 +65,7 @@ public class NewsService {
                 String summary = generateSummary(news.getContent());
                 news.setDescription(summary);
                 newsRepository.save(news);
+                publishSummary(news); // Publish the summarized news
             } catch (Exception e) {
                 log.error("Error summarizing news with ID: {}", news.getId(), e);
             }
@@ -81,4 +87,13 @@ public class NewsService {
         return response.getBody().summary();
     }
 
+    private void publishSummary(News news) {
+        log.info("Publishing summarized news: {}", news.getTitle());
+        try {
+            daprClient.publishEvent("pubsub", "summarized-news", news).block();
+            log.info("Summarized news published successfully: {}", news.getTitle());
+        } catch (Exception e) {
+            log.error("Error publishing summarized news: {}", news.getTitle(), e);
+        }
+    }
 }

@@ -26,6 +26,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final DaprClient daprClient = new DaprClientBuilder().build();
     private final ObjectMapper objectMapper = new ObjectMapper();
+
     @PostConstruct
     public void init() {
         log.info("Initializing user service...");
@@ -52,6 +53,8 @@ public class UserService {
                     .build();
             userRepository.save(user);
             log.info("User registered successfully with email: {}", user.getEmail());
+            // Publish an event to notify other services
+            publishEvent("user-registered", new UserResponse(user.getId(), user.getEmail(), user.getPreferences()));
             return new UserResponse(user.getId(), user.getEmail(), user.getPreferences());
         } catch (Exception e) {
             log.error("Error registering user with email: {}", userRequest.email(), e);
@@ -67,6 +70,8 @@ public class UserService {
             user.setPreferences(preferencesRequest.preferences());
             userRepository.save(user);
             log.info("Preferences updated for user ID: {}", user.getId());
+            // Publish an event to notify other services
+            publishEvent("preferences-updated", new UserResponse(user.getId(), user.getEmail(), user.getPreferences()));
             return new UserResponse(user.getId(), user.getEmail(), user.getPreferences());
         } catch (UserNotFoundException e) {
             log.warn("User not found with ID: {}", preferencesRequest.userId(), e);
@@ -98,6 +103,8 @@ public class UserService {
                     .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
             userRepository.delete(user);
             log.info("User deleted successfully with ID: {}", userId);
+            // Publish an event to notify other services
+            publishEvent("user-deleted", userId);
         } catch (UserNotFoundException e) {
             log.warn("User not found with ID: {}", userId, e);
             throw e;
@@ -115,6 +122,16 @@ public class UserService {
             log.info("Service {} invoked successfully with method {}", serviceId, methodName);
         } catch (Exception e) {
             log.error("Error invoking service {} with method {}", serviceId, methodName, e);
+        }
+    }
+
+    private void publishEvent(String topic, Object event) {
+        log.info("Publishing event to topic {}: {}", topic, event);
+        try {
+            daprClient.publishEvent("pubsub", topic, event).block();
+            log.info("Event published to topic {}: {}", topic, event);
+        } catch (Exception e) {
+            log.error("Error publishing event to topic {}: {}", topic, e);
         }
     }
 }
