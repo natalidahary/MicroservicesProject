@@ -1,17 +1,16 @@
 version: '3.8'
 
 services:
-  ## mongodb - Database ##
-  mongo:
+  mymongodb:
     image: mongo:latest
-    container_name: mongo
+    container_name: mymongodb
     ports:
-      - "27018:27017"
+      - "27017:27017"
     volumes:
       - mongo-data:/data/db
-      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    networks:
+      - microservices-network
 
-  ## user-service - dapr ##
   user-service:
     build:
       context: ./user-service
@@ -19,23 +18,27 @@ services:
     ports:
       - "8081:8081"
     environment:
-      - SPRING_DATA_MONGODB_URI=mongodb://mongo:27017/users
+      - SPRING_DATA_MONGODB_URI=mongodb://mymongodb:27017/users
     depends_on:
-      - mongo
+      - mymongodb
+    networks:
+      - microservices-network
     command: ["sh", "-c", "dapr run --app-id user-service --app-port 8081 --dapr-http-port 3500 --components-path /dapr/components -- java -jar /user-service.jar"]
 
-  ## news-service - dapr ##
   news-service:
     build:
       context: ./news-service
       dockerfile: Dockerfile
     ports:
       - "8082:8082"
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://mongo:27017/news
     depends_on:
-      - mongo
+      - mymongodb
+    networks:
+      - microservices-network
     command: ["sh", "-c", "dapr run --app-id news-service --app-port 8082 --dapr-http-port 3501 --components-path /dapr/components -- java -jar /news-service.jar"]
 
-  ## notification-service - dapr ##
   notification-service:
     build:
       context: ./notification-service
@@ -47,12 +50,13 @@ services:
       - SPRING_MAIL_PORT=587
       - SPRING_MAIL_USERNAME=your_email@example.com
       - SPRING_MAIL_PASSWORD=your_email_password
+      - SPRING_DATA_MONGODB_URI=mongodb://mongo:27017/notifications
     depends_on:
-      - mongo
+      - mymongodb
+    networks:
+      - microservices-network
     command: ["sh", "-c", "dapr run --app-id notification-service --app-port 8083 --dapr-http-port 3502 --components-path /dapr/components -- java -jar /notification-service.jar"]
 
-
-#  ## apigateway - dapr ##
 #  api-gateway:
 #    build:
 #      context: ./api-gateway
@@ -63,10 +67,16 @@ services:
 #      - user-service
 #      - news-service
 #      - notification-service
+#    networks:
+#      - microservices-network
 #    command: ["sh", "-c", "dapr run --app-id api-gateway --app-port 8080 --dapr-http-port 3503 --components-path /dapr/components -- java -jar /api-gateway.jar"]
 
 volumes:
   mongo-data:
+
+networks:
+  microservices-network:
+    driver: bridge
 
 
 #version: '3.8'
