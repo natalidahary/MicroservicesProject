@@ -11,6 +11,23 @@ services:
     networks:
       - microservices-network
 
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - microservices-network
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - microservices-network
+
   user-service:
     build:
       context: ./user-service
@@ -19,11 +36,37 @@ services:
       - "8081:8081"
     environment:
       - SPRING_DATA_MONGODB_URI=mongodb://mymongodb:27017/users
+      - DAPR_HTTP_PORT=3500
+      - DAPR_HTTP_ENDPOINT=http://localhost:3500
     depends_on:
       - mymongodb
+      - rabbitmq
     networks:
       - microservices-network
-    command: ["sh", "-c", "dapr run --app-id user-service --app-port 8081 --dapr-http-port 3500 --components-path /dapr/components -- java -jar /user-service.jar"]
+
+  dapr-sidecar-user-service:
+    image: daprio/daprd:1.13.5
+    container_name: dapr-sidecar-user-service
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 10
+        window: 120s
+    command: [
+      "./daprd",
+      "-app-id", "user-service",
+      "-app-port", "8081",
+      "-app-protocol", "http",
+      "-dapr-http-port", "3500",
+      "-components-path", "./dapr/components",
+      "-config", "./dapr/config.yaml"
+    ]
+    volumes:
+      - "./dapr:/dapr"
+    depends_on:
+      - user-service
+    network_mode: "service:user-service"
 
   news-service:
     build:
@@ -32,12 +75,38 @@ services:
     ports:
       - "8082:8082"
     environment:
-      - SPRING_DATA_MONGODB_URI=mongodb://mongo:27017/news
+      - SPRING_DATA_MONGODB_URI=mongodb://mymongodb:27017/news
+      - DAPR_HTTP_PORT=3501
+      - DAPR_HTTP_ENDPOINT=http://localhost:3501
     depends_on:
       - mymongodb
+      - rabbitmq
     networks:
       - microservices-network
-    command: ["sh", "-c", "dapr run --app-id news-service --app-port 8082 --dapr-http-port 3501 --components-path /dapr/components -- java -jar /news-service.jar"]
+
+  dapr-sidecar-news-service:
+    image: daprio/daprd:1.13.5
+    container_name: dapr-sidecar-news-service
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 10
+        window: 120s
+    command: [
+      "./daprd",
+      "-app-id", "news-service",
+      "-app-port", "8082",
+      "-app-protocol", "http",
+      "-dapr-http-port", "3501",
+      "-components-path", "./dapr/components",
+      "-config", "./dapr/config.yaml"
+    ]
+    volumes:
+      - "./dapr:/dapr"
+    depends_on:
+      - news-service
+    network_mode: "service:news-service"
 
   notification-service:
     build:
@@ -46,37 +115,301 @@ services:
     ports:
       - "8083:8083"
     environment:
-      - SPRING_MAIL_HOST=smtp.example.com
-      - SPRING_MAIL_PORT=587
-      - SPRING_MAIL_USERNAME=your_email@example.com
-      - SPRING_MAIL_PASSWORD=your_email_password
-      - SPRING_DATA_MONGODB_URI=mongodb://mongo:27017/notifications
+      - SPRING_DATA_MONGODB_URI=mongodb://mymongodb:27017/notification
+      - DAPR_HTTP_PORT=3502
+      - DAPR_HTTP_ENDPOINT=http://localhost:3502
+      - SPRING_MAIL_HOST=sandbox.smtp.mailtrap.io
+      - SPRING_MAIL_PORT=2525
+      - SPRING_MAIL_USERNAME=8b8d57525b570a
+      - SPRING_MAIL_PASSWORD=d3b22b800e0161
+      - SPRING_MAIL_FROM=no-reply@example.com
     depends_on:
       - mymongodb
+      - rabbitmq
     networks:
       - microservices-network
-    command: ["sh", "-c", "dapr run --app-id notification-service --app-port 8083 --dapr-http-port 3502 --components-path /dapr/components -- java -jar /notification-service.jar"]
 
-#  api-gateway:
-#    build:
-#      context: ./api-gateway
-#      dockerfile: Dockerfile
-#    ports:
-#      - "8080:8080"
-#    depends_on:
-#      - user-service
-#      - news-service
-#      - notification-service
-#    networks:
-#      - microservices-network
-#    command: ["sh", "-c", "dapr run --app-id api-gateway --app-port 8080 --dapr-http-port 3503 --components-path /dapr/components -- java -jar /api-gateway.jar"]
+  dapr-sidecar-notification-service:
+    image: daprio/daprd:1.13.5
+    container_name: dapr-sidecar-notification-service
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 10
+        window: 120s
+    command: [
+      "./daprd",
+      "-app-id", "notification-service",
+      "-app-port", "8083",
+      "-app-protocol", "http",
+      "-dapr-http-port", "3502",
+      "-components-path", "./dapr/components",
+      "-config", "./dapr/config.yaml"
+    ]
+    volumes:
+      - "./dapr:/dapr"
+    depends_on:
+      - notification-service
+    network_mode: "service:notification-service"
 
 volumes:
   mongo-data:
 
 networks:
   microservices-network:
-    driver: bridge
+
+#version: '3.8'
+#
+#services:
+#  mymongodb:
+#    image: mongo:latest
+#    container_name: mymongodb
+#    ports:
+#      - "27017:27017"
+#    volumes:
+#      - mongo-data:/data/db
+#    networks:
+#      - microservices-network
+#
+#  redis:
+#    image: redis:latest
+#    container_name: redis
+#    ports:
+#      - "6379:6379"
+#    networks:
+#      - microservices-network
+#
+#  dapr-sidecar-user-service:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile.dapr
+#    container_name: dapr-sidecar-user-service
+#    networks:
+#      - microservices-network
+#    deploy:
+#               restart_policy:
+#                 condition: on-failure
+#                 delay: 5s
+#                 max_attempts: 10
+#                 window: 120s
+#    command: ["./daprd",
+#              "-app-port", "8081",
+#              "-app-id", "user-service",
+#              "-app-protocol", "http",
+#              "-dapr-http-port", "3500",
+#      #"-placement-host-address", "placement:50006",
+#              "-components-path", "./dapr/components",
+#              "-config", "./dapr/config.yaml",
+#      # "-log-level", "debug"
+#    ]
+#    volumes:
+#      - "./dapr/:/dapr"
+#    depends_on:
+#      - user-service
+#
+#  user-service:
+#    build:
+#      context: ./user-service
+#      dockerfile: Dockerfile
+#    ports:
+#      - "8081:8081"
+#    environment:
+#      - SPRING_DATA_MONGODB_URI=mongodb://mymongodb:27017/users
+#      - DAPR_HTTP_PORT=3500
+#      - DAPR_HTTP_ENDPOINT=http://localhost:3500
+#    depends_on:
+#      - mymongodb
+#      - redis
+#    networks:
+#      - microservices-network
+#    command: ["sh", "-c", "java -jar /app.jar"]
+#
+#  dapr-sidecar-news-service:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile.dapr
+#    container_name: dapr-sidecar-news-service
+#    networks:
+#      - microservices-network
+#    deploy:
+#      restart_policy:
+#        condition: on-failure
+#        delay: 5s
+#        max_attempts: 10
+#        window: 120s
+#    command: [ "./daprd",
+#               "-app-port", "8082",
+#               "-app-id", "news-service",
+#               "-app-protocol", "http",
+#               "-dapr-http-port", "3500",
+#      #"-placement-host-address", "placement:50006",
+#               "-components-path", "./dapr/components",
+#               "-config", "./dapr/config.yaml",
+#      # "-log-level", "debug"
+#    ]
+#    volumes:
+#      - "./dapr/:/dapr"
+#    depends_on:
+#      - news-service
+#
+#  news-service:
+#    build:
+#      context: ./news-service
+#      dockerfile: Dockerfile
+#    ports:
+#      - "8082:8082"
+#    environment:
+#      - SPRING_DATA_MONGODB_URI=mongodb://mymongodb:27017/news
+#      - DAPR_HTTP_PORT=3501
+#    depends_on:
+#      - mymongodb
+#      - redis
+#    networks:
+#      - microservices-network
+#    command: ["sh", "-c", "java -jar /app.jar"]
+#
+#  dapr-sidecar-notification-service:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile.dapr
+#    container_name: dapr-sidecar-notification-service
+#    networks:
+#      - microservices-network
+#    deploy:
+#      restart_policy:
+#        condition: on-failure
+#        delay: 5s
+#        max_attempts: 10
+#        window: 120s
+#    command: [ "./daprd",
+#               "-app-port", "8083",
+#               "-app-id", "notification-service",
+#               "-app-protocol", "http",
+#               "-dapr-http-port", "3500",
+#      #"-placement-host-address", "placement:50006",
+#               "-components-path", "./dapr/components",
+#               "-config", "./dapr/config.yaml",
+#      # "-log-level", "debug"
+#    ]
+#    volumes:
+#      - "./dapr/:/dapr"
+#    depends_on:
+#      - notification-service
+#
+#  notification-service:
+#    build:
+#      context: ./notification-service
+#      dockerfile: Dockerfile
+#    ports:
+#      - "8083:8083"
+#    environment:
+#      - SPRING_MAIL_HOST=sandbox.smtp.mailtrap.io
+#      - SPRING_MAIL_PORT=2525
+#      - SPRING_MAIL_USERNAME=8b8d57525b570a
+#      - SPRING_MAIL_PASSWORD=d3b22b800e0161
+#      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=true
+#      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=true
+#      - SPRING_MAIL_FROM=no-reply@example.com
+#      - SPRING_DATA_MONGODB_URI=mongodb://mymongodb:27017/notifications
+#      - DAPR_HTTP_PORT=3502
+#    depends_on:
+#      - mymongodb
+#      - redis
+#    networks:
+#      - microservices-network
+#    command: ["sh", "-c", "java -jar /app.jar"]
+#
+#volumes:
+#  mongo-data:
+#
+#networks:
+#  microservices-network:
+#    driver: bridge
+
+
+#version: '3.8'
+#
+#services:
+#  mymongodb:
+#    image: mongo:latest
+#    container_name: mymongodb
+#    ports:
+#      - "27017:27017"
+#    volumes:
+#      - mongo-data:/data/db
+#    networks:
+#      - microservices-network
+#
+#  user-service:
+#    build:
+#      context: ./user-service
+#      dockerfile: Dockerfile
+#    ports:
+#      - "8081:8081"
+#    environment:
+#      - SPRING_DATA_MONGODB_URI=mongodb://mymongodb:27017/users
+#    depends_on:
+#      - mymongodb
+#    networks:
+#      - microservices-network
+#    command: ["sh", "-c", "dapr run --app-id user-service --app-port 8081 --dapr-http-port 3500 --components-path /dapr/components -- java -jar /user-service.jar"]
+#
+#  news-service:
+#    build:
+#      context: ./news-service
+#      dockerfile: Dockerfile
+#    ports:
+#      - "8082:8082"
+#    environment:
+#      - SPRING_DATA_MONGODB_URI=mongodb://mongo:27017/news
+#    depends_on:
+#      - mymongodb
+#    networks:
+#      - microservices-network
+#    command: ["sh", "-c", "dapr run --app-id news-service --app-port 8082 --dapr-http-port 3501 --components-path /dapr/components -- java -jar /news-service.jar"]
+#
+#  notification-service:
+#    build:
+#      context: ./notification-service
+#      dockerfile: Dockerfile
+#    ports:
+#      - "8083:8083"
+#    environment:
+#      - SPRING_MAIL_HOST=sandbox.smtp.mailtrap.io
+#      - SPRING_MAIL_PORT=2525
+#      - SPRING_MAIL_USERNAME=8b8d57525b570a
+#      - SPRING_MAIL_PASSWORD=d3b22b800e0161
+#      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=true
+#      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=true
+#      - SPRING_MAIL_FROM=no-reply@example.com
+#      - SPRING_DATA_MONGODB_URI=mongodb://mongo:27017/notifications
+#    depends_on:
+#      - mymongodb
+#    networks:
+#      - microservices-network
+#    command: ["sh", "-c", "dapr run --app-id notification-service --app-port 8083 --dapr-http-port 3502 --components-path /dapr/components -- java -jar /notification-service.jar"]
+#
+##  api-gateway:
+##    build:
+##      context: ./api-gateway
+##      dockerfile: Dockerfile
+##    ports:
+##      - "8080:8080"
+##    depends_on:
+##      - user-service
+##      - news-service
+##      - notification-service
+##    networks:
+##      - microservices-network
+##    command: ["sh", "-c", "dapr run --app-id api-gateway --app-port 8080 --dapr-http-port 3503 --components-path /dapr/components -- java -jar /api-gateway.jar"]
+#
+#volumes:
+#  mongo-data:
+#
+#networks:
+#  microservices-network:
+#    driver: bridge
 
 
 #version: '3.8'

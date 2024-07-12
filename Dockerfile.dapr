@@ -1,0 +1,18 @@
+# Dockerfile.dapr
+
+FROM ubuntu:latest
+
+# Install necessary packages
+RUN apt-get update && apt-get install -y wget ca-certificates
+
+# Install Dapr CLI
+RUN wget -q https://raw.githubusercontent.com/dapr/cli/master/install/install.sh -O - | /bin/bash
+
+# Ensure the Dapr CLI is installed in the correct location
+RUN mkdir -p /dapr && \
+    wget -q https://github.com/dapr/dapr/releases/download/v1.13.5/daprd_linux_amd64.tar.gz -O - | tar -xz -C /dapr
+
+# Copy the daprd binary to /usr/local/bin
+RUN cp /dapr/daprd /usr/local/bin/daprd
+
+ENTRYPOINT ["daprd"]

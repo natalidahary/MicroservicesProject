@@ -30,9 +30,7 @@ public class NewsService {
 
     private final NewsRepository newsRepository;
     private final RestTemplate restTemplate = new RestTemplate();
-    private final DaprClient daprClient = new DaprClientBuilder().build();
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
+    private final DaprClient daprClient = new DaprClientBuilder().build();;
 
     @Value("${newsdata.api.key}")
     private String newsDataApiKey;
@@ -82,7 +80,7 @@ public class NewsService {
 
     private String generateSummary(String content) {
         // Implement the API call to Gemini AI API to summarize the content
-        // Example API call (replace with actual implementation)://
+        // Example API call (replace with actual implementation)
         String url = "https://api.gemini.ai/summarize";
         HttpHeaders headers = new HttpHeaders();
         headers.set("Content-Type", "application/json");

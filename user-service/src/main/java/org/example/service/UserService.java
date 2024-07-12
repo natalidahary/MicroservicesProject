@@ -3,7 +3,6 @@ package org.example.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.dapr.client.DaprClient;
 import io.dapr.client.DaprClientBuilder;
-import io.dapr.client.domain.HttpExtension;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +24,6 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final DaprClient daprClient = new DaprClientBuilder().build();
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @PostConstruct
     public void init() {
@@ -46,92 +44,61 @@ public class UserService {
 
     public UserResponse registerUser(UserRequest userRequest) {
         log.info("Registering user with email: {}", userRequest.email());
-        try {
-            User user = User.builder()
-                    .email(userRequest.email())
-                    .preferences(userRequest.preferences())
-                    .build();
-            userRepository.save(user);
-            log.info("User registered successfully with email: {}", user.getEmail());
-            // Publish an event to notify other services
-            publishEvent("user-registered", new UserResponse(user.getId(), user.getEmail(), user.getPreferences()));
-            return new UserResponse(user.getId(), user.getEmail(), user.getPreferences());
-        } catch (Exception e) {
-            log.error("Error registering user with email: {}", userRequest.email(), e);
-            throw e;
-        }
+        User user = User.builder()
+                .email(userRequest.email())
+                .preferences(userRequest.preferences())
+                .build();
+        userRepository.save(user);
+        log.info("User registered successfully with email: {}", user.getEmail());
+
+        // Publish an event to notify other services
+        daprClient.publishEvent("pubsub", "user-registered", user).block();
+
+        return new UserResponse(user.getId(), user.getEmail(), user.getPreferences());
     }
 
     public UserResponse updatePreferences(PreferencesRequest preferencesRequest) {
         log.info("Updating preferences for user ID: {}", preferencesRequest.userId());
-        try {
-            User user = userRepository.findById(preferencesRequest.userId())
-                    .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + preferencesRequest.userId()));
-            user.setPreferences(preferencesRequest.preferences());
-            userRepository.save(user);
-            log.info("Preferences updated for user ID: {}", user.getId());
-            // Publish an event to notify other services
-            publishEvent("preferences-updated", new UserResponse(user.getId(), user.getEmail(), user.getPreferences()));
-            return new UserResponse(user.getId(), user.getEmail(), user.getPreferences());
-        } catch (UserNotFoundException e) {
-            log.warn("User not found with ID: {}", preferencesRequest.userId(), e);
-            throw e;
-        } catch (Exception e) {
-            log.error("Error updating preferences for user ID: {}", preferencesRequest.userId(), e);
-            throw e;
-        }
+        User user = userRepository.findById(preferencesRequest.userId())
+                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + preferencesRequest.userId()));
+        user.setPreferences(preferencesRequest.preferences());
+        userRepository.save(user);
+        log.info("Preferences updated for user ID: {}", user.getId());
+
+        // Publish an event to notify other services
+        daprClient.publishEvent("pubsub", "preferences-updated", user).block();
+
+        return new UserResponse(user.getId(), user.getEmail(), user.getPreferences());
     }
 
     public List<UserResponse> getAllUsers() {
         log.info("Fetching all users.");
-        try {
-            List<User> users = userRepository.findAll();
-            log.info("Fetched {} users.", users.size());
-            return users.stream()
-                    .map(user -> new UserResponse(user.getId(), user.getEmail(), user.getPreferences()))
-                    .collect(Collectors.toList());
-        } catch (Exception e) {
-            log.error("Error fetching all users", e);
-            throw e;
-        }
+        List<User> users = userRepository.findAll();
+        log.info("Fetched {} users.", users.size());
+        return users.stream()
+                .map(user -> new UserResponse(user.getId(), user.getEmail(), user.getPreferences()))
+                .collect(Collectors.toList());
     }
 
     public void deleteUserById(String userId) {
         log.info("Deleting user with ID: {}", userId);
-        try {
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
-            userRepository.delete(user);
-            log.info("User deleted successfully with ID: {}", userId);
-            // Publish an event to notify other services
-            publishEvent("user-deleted", userId);
-        } catch (UserNotFoundException e) {
-            log.warn("User not found with ID: {}", userId, e);
-            throw e;
-        } catch (Exception e) {
-            log.error("Error deleting user with ID: {}", userId, e);
-            throw e;
-        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
+        userRepository.delete(user);
+        log.info("User deleted successfully with ID: {}", userId);
+
+        // Publish an event to notify other services
+        daprClient.publishEvent("pubsub", "user-deleted", userId).block();
     }
 
     public void invokeOtherService(String serviceId, String methodName, Object request) {
         log.info("Invoking service {} with method {}", serviceId, methodName);
         try {
-            byte[] requestData = objectMapper.writeValueAsBytes(request);
-            daprClient.invokeMethod(serviceId, methodName, requestData, HttpExtension.POST, byte[].class).block();
+            byte[] requestData = new ObjectMapper().writeValueAsBytes(request);
+            daprClient.invokeMethod(serviceId, methodName, requestData, io.dapr.client.domain.HttpExtension.POST, byte[].class).block();
             log.info("Service {} invoked successfully with method {}", serviceId, methodName);
         } catch (Exception e) {
             log.error("Error invoking service {} with method {}", serviceId, methodName, e);
-        }
-    }
-
-    private void publishEvent(String topic, Object event) {
-        log.info("Publishing event to topic {}: {}", topic, event);
-        try {
-            daprClient.publishEvent("pubsub", topic, event).block();
-            log.info("Event published to topic {}: {}", topic, event);
-        } catch (Exception e) {
-            log.error("Error publishing event to topic {}: {}", topic, e);
         }
     }
 }

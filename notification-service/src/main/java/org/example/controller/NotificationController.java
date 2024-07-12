@@ -16,8 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class NotificationController {
 
-    @Autowired
-    private NotificationService notificationService;
+    private final NotificationService notificationService;
 
     @PostMapping("/send")
     public ResponseEntity<String> sendNotification(@RequestBody NotificationRequest notificationRequest) {

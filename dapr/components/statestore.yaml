@@ -1,5 +1,3 @@
-
-## statestore - Dapr" ##
 apiVersion: dapr.io/v1alpha1
 kind: Component
 metadata:
@@ -10,6 +8,6 @@ spec:
   version: v1
   metadata:
     - name: redisHost
-      value: "redis-master:6379"
+      value: "redis:6379"
     - name: redisPassword
       value: ""
