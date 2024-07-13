@@ -18,7 +18,6 @@ public class User {
     @Id
     private String id;
     private String email;
-    private String username;
-    private String password;
-    private List<Category> categories;
+    private List<String> preferences;
+
 }
