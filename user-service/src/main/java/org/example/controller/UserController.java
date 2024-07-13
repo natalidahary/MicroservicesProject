@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.dto.PreferencesRequest;
 import org.example.dto.UserRequest;
 import org.example.dto.UserResponse;
+import org.example.model.Category;
 import org.example.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,6 +43,12 @@ public class UserController {
     public ResponseEntity<Void> deleteUserById(@PathVariable String userId) {
         userService.deleteUserById(userId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @GetMapping("/{userId}/preferences")
+    public ResponseEntity<List<Category>> getUserPreferences(@PathVariable String userId) {
+        List<Category> preferences = userService.getUserPreferences(userId);
+        return ResponseEntity.ok(preferences);
     }
 
     @PostMapping("/invoke")
