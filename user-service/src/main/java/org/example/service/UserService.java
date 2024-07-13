@@ -135,6 +135,12 @@ public class UserService {
         }
     }
 
+    public List<Category> getUserPreferences(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        return user.getCategories();
+    }
+
     public void invokeOtherService(String serviceId, String methodName, String requestBody) {
         log.info("Invoking service {} with method {}", serviceId, methodName);
         try {
