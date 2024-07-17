@@ -13,7 +13,7 @@ News Service
 Notification Service
 - **Handles sending notifications to users.
 - **Port: 8083
-  <img width="1000" alt="Screenshot 2024-07-17 at 20 27 04" src="https://github.com/user-attachments/assets/2d822e7b-8445-4721-9d27-3cf3c8085fbf">
+  <img width="500" alt="Screenshot 2024-07-17 at 20 27 04" src="https://github.com/user-attachments/assets/2d822e7b-8445-4721-9d27-3cf3c8085fbf">
 
 
 ##Prerequisites
@@ -22,7 +22,7 @@ Notification Service
 - **JDK 17
 - **Maven
 - **Rabbitmq
-<img width="400" alt="Screenshot 2024-07-17 at 21 05 28" src="https://github.com/user-attachments/assets/25b5314d-0196-4218-81bb-d585054e9254">
+<img width="500" alt="Screenshot 2024-07-17 at 21 05 28" src="https://github.com/user-attachments/assets/25b5314d-0196-4218-81bb-d585054e9254">
 
   
 
@@ -30,8 +30,8 @@ Notification Service
 ###Each microservice uses the following dependencies:
 - **Spring Boot for application framework
 - **Spring Data MongoDB for MongoDB integration
-<img width="250" alt="Screenshot 2024-07-17 at 20 27 38" src="https://github.com/user-attachments/assets/78769cd4-bc5c-4344-91c3-6291df652d1e">
-<img width="250" alt="Screenshot 2024-07-17 at 20 27 58" src="https://github.com/user-attachments/assets/f822e34a-55b5-405a-a292-358e28f86743">
+<img width="500" alt="Screenshot 2024-07-17 at 20 27 38" src="https://github.com/user-attachments/assets/78769cd4-bc5c-4344-91c3-6291df652d1e">
+<img width="500" alt="Screenshot 2024-07-17 at 20 27 58" src="https://github.com/user-attachments/assets/f822e34a-55b5-405a-a292-358e28f86743">
 
 - **Spring Web for building web applications
 - **Dapr SDK for Dapr integration
@@ -47,8 +47,8 @@ Notification Service
 
 ##Access Swagger UI:
 - **User Service: http://localhost:8081/swagger-ui.html
-<img width="300" alt="Screenshot 2024-07-17 at 23 19 45" src="https://github.com/user-attachments/assets/77d415a1-e6d0-4342-8eb4-bd7dd2e9497e">
+<img width="500" alt="Screenshot 2024-07-17 at 23 19 45" src="https://github.com/user-attachments/assets/77d415a1-e6d0-4342-8eb4-bd7dd2e9497e">
 - **News Service: http://localhost:8082/swagger-ui.html
-<img width="300" alt="Screenshot 2024-07-17 at 23 23 44" src="https://github.com/user-attachments/assets/a0bb59ce-5164-4d5f-b88b-6acd369d270a">
+- <img width="500" alt="Screenshot 2024-07-17 at 23 23 44" src="https://github.com/user-attachments/assets/a0bb59ce-5164-4d5f-b88b-6acd369d270a">
 - **Notification Service: http://localhost:8083/swagger-ui.html
-<img width="300" alt="Screenshot 2024-07-17 at 23 24 00" src="https://github.com/user-attachments/assets/597782ac-2290-4bee-8060-ff2b1f0d4cf4">
+- <img width="500" alt="Screenshot 2024-07-17 at 23 24 00" src="https://github.com/user-attachments/assets/597782ac-2290-4bee-8060-ff2b1f0d4cf4">
