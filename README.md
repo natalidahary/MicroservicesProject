@@ -49,6 +49,6 @@ Notification Service
 - **User Service: http://localhost:8081/swagger-ui.html
 <img width="500" alt="Screenshot 2024-07-17 at 23 19 45" src="https://github.com/user-attachments/assets/77d415a1-e6d0-4342-8eb4-bd7dd2e9497e">
 - **News Service: http://localhost:8082/swagger-ui.html
-- <img width="500" alt="Screenshot 2024-07-17 at 23 23 44" src="https://github.com/user-attachments/assets/a0bb59ce-5164-4d5f-b88b-6acd369d270a">
+<img width="500" alt="Screenshot 2024-07-17 at 23 23 44" src="https://github.com/user-attachments/assets/a0bb59ce-5164-4d5f-b88b-6acd369d270a">
 - **Notification Service: http://localhost:8083/swagger-ui.html
-- <img width="500" alt="Screenshot 2024-07-17 at 23 24 00" src="https://github.com/user-attachments/assets/597782ac-2290-4bee-8060-ff2b1f0d4cf4">
+<img width="500" alt="Screenshot 2024-07-17 at 23 24 00" src="https://github.com/user-attachments/assets/597782ac-2290-4bee-8060-ff2b1f0d4cf4">
