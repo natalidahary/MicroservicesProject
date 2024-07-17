@@ -1,23 +1,26 @@
-# Use an appropriate base image for Dapr sidecar
+# Stage 1: Get the daprd binary from dapr image
 FROM daprio/daprd:1.13.5 AS dapr
 
-# Stage 1: Build the application
+# Stage 2: Build the application
 FROM openjdk:17-jdk-slim AS build
 
 # The application's JAR file
 ARG JAR_FILE=target/*.jar
 
 # Copy the JAR file into the container
-COPY ${JAR_FILE} app.jar
+COPY ${JAR_FILE} /app.jar
 
-# Stage 2: Run
+# Stage 3: Create the final runtime image
 FROM openjdk:17-jdk-slim
+
+# Install bash, iputils-ping, and netcat for troubleshooting
+RUN apt-get update && apt-get install -y bash iputils-ping netcat && rm -rf /var/lib/apt/lists/*
 
 # Set up the volume
 VOLUME /tmp
 
 # Copy the built app.jar from the build stage
-COPY --from=build /app.jar app.jar
+COPY --from=build /app.jar /app.jar
 
 # Copy the daprd binary from the dapr image
 COPY --from=dapr /daprd /usr/local/bin/daprd

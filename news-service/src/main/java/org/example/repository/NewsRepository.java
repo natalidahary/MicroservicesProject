@@ -8,5 +8,4 @@ import java.util.List;
 
 @Repository
 public interface NewsRepository extends MongoRepository<News, String> {
-    List<News> findByCategory(String category);
 }

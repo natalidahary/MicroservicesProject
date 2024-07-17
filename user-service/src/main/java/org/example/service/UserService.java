@@ -1,11 +1,12 @@
 package org.example.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.dapr.client.DaprClient;
-import io.dapr.client.domain.HttpExtension;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.dto.NewsRequest;
 import org.example.dto.PreferencesRequest;
 import org.example.dto.UserRequest;
 import org.example.dto.UserResponse;
@@ -14,11 +15,13 @@ import org.example.model.Category;
 import org.example.model.User;
 import org.example.repository.UserRepository;
 import org.example.util.PasswordValidator;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -30,10 +33,20 @@ public class UserService {
     private final UserRepository userRepository;
     private final DaprClient daprClient;
     private final ObjectMapper objectMapper;
+    private HttpClient httpClient;
+
 
     @PostConstruct
     public void init() {
         log.info("Initializing user service...");
+        this.httpClient = HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_2)
+                .connectTimeout(Duration.ofSeconds(10))
+                .build();
+    }
+
+    @PostConstruct
+    public void initData() {
         try {
             if (userRepository.count() == 0) {
                 User user = User.builder()
@@ -53,7 +66,6 @@ public class UserService {
         }
     }
 
-    //@CachePut(value = "users", key = "#userRequest.email")
     public UserResponse registerUser(UserRequest userRequest) {
         log.debug("Attempting to register user with email: {}", userRequest.email());
 
@@ -79,7 +91,7 @@ public class UserService {
         // Publish an event to notify other services via RabbitMQ
         try {
             String userJson = objectMapper.writeValueAsString(user);
-            daprClient.publishEvent("pubsub", "user-registered", userJson).block();
+            daprClient.publishEvent("rabbitmq-pubsub", "user-registered", userJson).block();
         } catch (Exception e) {
             log.error("Error publishing event", e);
         }
@@ -87,7 +99,7 @@ public class UserService {
         return new UserResponse(user.getId(), user.getEmail(), user.getUsername(), user.getCategories());
     }
 
-    //@CachePut(value = "users", key = "#preferencesRequest.userId")
+
     public UserResponse updatePreferences(PreferencesRequest preferencesRequest) {
         log.info("Updating preferences for user ID: {}", preferencesRequest.userId());
         User user = userRepository.findById(preferencesRequest.userId())
@@ -100,7 +112,7 @@ public class UserService {
         // Publish an event to notify other services via RabbitMQ
         try {
             String userJson = objectMapper.writeValueAsString(user);
-            daprClient.publishEvent("pubsub", "preferences-updated", userJson).block();
+            daprClient.publishEvent("rabbitmq-pubsub", "preferences-updated", userJson).block();
         } catch (Exception e) {
             log.error("Error publishing event", e);
         }
@@ -108,7 +120,6 @@ public class UserService {
         return new UserResponse(user.getId(), user.getEmail(), user.getUsername(), user.getCategories());
     }
 
-    //@Cacheable(value = "users")
     public List<UserResponse> getAllUsers() {
         log.info("Fetching all users.");
         List<User> users = userRepository.findAll();
@@ -118,7 +129,7 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-    //@CacheEvict(value = "users", key = "#userId")
+
     public void deleteUserById(String userId) {
         log.info("Deleting user with ID: {}", userId);
         User user = userRepository.findById(userId)
@@ -129,25 +140,60 @@ public class UserService {
         // Publish an event to notify other services via RabbitMQ
         try {
             String userJson = objectMapper.writeValueAsString(userId);
-            daprClient.publishEvent("pubsub", "user-deleted", userJson).block();
+            daprClient.publishEvent("rabbitmq-pubsub", "user-deleted", userJson).block();
         } catch (Exception e) {
             log.error("Error publishing event", e);
         }
     }
 
-    public List<Category> getUserPreferences(String userId) {
+
+    public List<String> getUserPreferences(String userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
-        return user.getCategories();
+        return user.getCategories().stream()
+                .map(Category::getPreference)
+                .collect(Collectors.toList());
     }
+
+
+    public String getUserEmail(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        return user.getEmail();
+    }
+
+
+    public void sendPreferencesToNewsService(String userId) {
+        List<String> preferences = getUserPreferences(userId);
+        String email = getUserEmail(userId);
+        try {
+            String preferencesJson = objectMapper.writeValueAsString(new NewsRequest(preferences, userId, email));
+            invokeOtherService("news-service", "news/processPreferences", preferencesJson);
+        } catch (JsonProcessingException e) {
+            log.error("Error converting preferences to JSON", e);
+            throw new RuntimeException("Failed to convert preferences to JSON", e);
+        }
+    }
+
 
     public void invokeOtherService(String serviceId, String methodName, String requestBody) {
         log.info("Invoking service {} with method {}", serviceId, methodName);
         try {
-            daprClient.invokeMethod(serviceId, methodName, requestBody, HttpExtension.POST).block();
+            String daprUrl = String.format("http://localhost:3500/v1.0/invoke/%s/method/%s", serviceId, methodName);
+            log.info("Dapr URL: {}", daprUrl);
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(daprUrl))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+                    .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             log.info("Service {} invoked successfully with method {}", serviceId, methodName);
+            log.info("Response: {}", response.body());
         } catch (Exception e) {
             log.error("Error invoking service {} with method {}", serviceId, methodName, e);
         }
     }
+
+
 }

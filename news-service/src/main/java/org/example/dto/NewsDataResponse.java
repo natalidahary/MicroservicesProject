@@ -1,6 +1,5 @@
 package org.example.dto;
 
-public record NewsDataResponse (NewsResult[] results){
-    public record NewsResult(String title, String description,String content, String url, String source, String publishedAt ) {
-    }
+public record NewsDataResponse(String status, int totalResults, NewsResult[] results) {
+    public static record NewsResult(String title, String content, String link) {}
 }

@@ -1,4 +1,4 @@
 package org.example.dto;
 
-public record NotificationRequest(String email, String subject, String message) {
+public record NotificationRequest(String email, String title, String content, String link) {
 }
