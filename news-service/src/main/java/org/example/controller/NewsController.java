@@ -26,6 +26,7 @@ public class NewsController {
         return ResponseEntity.ok().build();
     }
 
+
     @GetMapping("/sendNotification")
     public ResponseEntity<String> sendNotification(@RequestBody NotificationRequest notificationRequest) {
         newsService.sendNotification(notificationRequest);
