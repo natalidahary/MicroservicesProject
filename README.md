@@ -1,12 +1,12 @@
 # Microservices Application with Dapr
 
-##Overview
+## Overview
 This project is a microservices-based application leveraging Spring Boot, Dapr for distributed application runtime, RabbitMQ for message brokering, and MongoDB for data storage. The services include User Service, News Service, and Notification Service. Each service exposes a REST API documented with Swagger.
 
-##Services
+## Services
 User Service
-- **Manages user registration, preferences, and other user-related operations.
-- **Port: 8081
+-** Manages user registration, preferences, and other user-related operations.
+-** Port: 8081
 News Service
 - **Fetches and processes news based on user preferences and sends notifications.
 - **Port: 8082
