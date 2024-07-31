@@ -10,13 +10,15 @@ This project is a microservices-based application leveraging Spring Boot, Dapr f
 ### News Service:
 - Fetches and processes news based on user preferences and sends notifications.
 - Newsdata.io is used in your project to fetch and aggregate news articles based on user preferences.
-- <img width="245" alt="Screenshot 2024-07-31 at 17 03 58" src="https://github.com/user-attachments/assets/7b88206c-48b0-4288-beea-3ef145679349">
+<img width="245" alt="Screenshot 2024-07-31 at 17 03 58" src="https://github.com/user-attachments/assets/7b88206c-48b0-4288-beea-3ef145679349">
 - EdenAI is utilized to summarize the fetched news articles using advanced natural language processing capabilities.
-- <img width="153" alt="Screenshot 2024-07-31 at 17 04 18" src="https://github.com/user-attachments/assets/08d3d617-7b7a-45c1-9024-3d31cd322a31">
+<img width="153" alt="Screenshot 2024-07-31 at 17 04 18" src="https://github.com/user-attachments/assets/08d3d617-7b7a-45c1-9024-3d31cd322a31">
 
 - Port: 8082
 ### Notification Service:
 - Handles sending notifications to users.
+- Mailtrap is used as a fake SMTP server to safely test and debug email sending functionality without sending actual emails to users.
+  It captures the outgoing emails, allowing you to review and verify them in a controlled environment.
 - Port: 8083
 <img width="500" alt="Screenshot 2024-07-17 at 20 27 04" src="https://github.com/user-attachments/assets/2d822e7b-8445-4721-9d27-3cf3c8085fbf">
 
