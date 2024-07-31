@@ -9,6 +9,11 @@ This project is a microservices-based application leveraging Spring Boot, Dapr f
 - Port: 8081
 ### News Service:
 - Fetches and processes news based on user preferences and sends notifications.
+- Newsdata.io is used in your project to fetch and aggregate news articles based on user preferences.
+- <img width="245" alt="Screenshot 2024-07-31 at 17 03 58" src="https://github.com/user-attachments/assets/7b88206c-48b0-4288-beea-3ef145679349">
+- EdenAI is utilized to summarize the fetched news articles using advanced natural language processing capabilities.
+- <img width="153" alt="Screenshot 2024-07-31 at 17 04 18" src="https://github.com/user-attachments/assets/08d3d617-7b7a-45c1-9024-3d31cd322a31">
+
 - Port: 8082
 ### Notification Service:
 - Handles sending notifications to users.
@@ -16,7 +21,8 @@ This project is a microservices-based application leveraging Spring Boot, Dapr f
 <img width="500" alt="Screenshot 2024-07-17 at 20 27 04" src="https://github.com/user-attachments/assets/2d822e7b-8445-4721-9d27-3cf3c8085fbf">
 
 
-### Rabbitmq
+### RabbitMQ
+- RabbitMQ is used as a message broker to facilitate asynchronous communication between microservices by sending and receiving messages via queues
 <img width="500" alt="Screenshot 2024-07-29 at 23 58 29" src="https://github.com/user-attachments/assets/b5ed3cc4-91be-468e-ada7-9bc3db27271a">
 <img width="500" alt="Screenshot 2024-07-29 at 23 58 35" src="https://github.com/user-attachments/assets/2f4b051a-ba37-4bf9-920d-21f9233af68e">
 
