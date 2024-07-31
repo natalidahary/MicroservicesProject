@@ -13,10 +13,10 @@ This project is a microservices-based application leveraging Spring Boot, Dapr f
 ### Notification Service:
 - Handles sending notifications to users.
 - Port: 8083
-  <img width="500" alt="Screenshot 2024-07-17 at 20 27 04" src="https://github.com/user-attachments/assets/2d822e7b-8445-4721-9d27-3cf3c8085fbf">
+<img width="500" alt="Screenshot 2024-07-17 at 20 27 04" src="https://github.com/user-attachments/assets/2d822e7b-8445-4721-9d27-3cf3c8085fbf">
 
 
-## Rabbitmq
+### Rabbitmq
 <img width="500" alt="Screenshot 2024-07-29 at 23 58 29" src="https://github.com/user-attachments/assets/b5ed3cc4-91be-468e-ada7-9bc3db27271a">
 <img width="500" alt="Screenshot 2024-07-29 at 23 58 35" src="https://github.com/user-attachments/assets/2f4b051a-ba37-4bf9-920d-21f9233af68e">
 
