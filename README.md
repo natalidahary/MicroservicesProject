@@ -11,8 +11,10 @@ This project is a microservices-based application leveraging Spring Boot, Dapr f
 - Fetches and processes news based on user preferences and sends notifications.
 - Newsdata.io is used in your project to fetch and aggregate news articles based on user preferences.
 <img width="150" alt="Screenshot 2024-07-31 at 17 03 58" src="https://github.com/user-attachments/assets/7b88206c-48b0-4288-beea-3ef145679349">
+
 - EdenAI is utilized to summarize the fetched news articles using advanced natural language processing capabilities.
 <img width="150" alt="Screenshot 2024-07-31 at 17 04 18" src="https://github.com/user-attachments/assets/08d3d617-7b7a-45c1-9024-3d31cd322a31">
+
 - Port: 8082
 
 ### Notification Service:
