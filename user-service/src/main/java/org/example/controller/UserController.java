@@ -12,7 +12,6 @@ import org.example.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
@@ -22,7 +21,7 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     @PostMapping("/register")
     public ResponseEntity<UserResponse> registerUser(@RequestBody UserRequest userRequest) {
@@ -71,7 +70,7 @@ public class UserController {
         userService.sendPreferencesToNewsService(userId);
 
         // Return the JSON message in the response
-        return ResponseEntity.ok("Preferences sent to news service for userId: " + userId + "\n" + preferencesJson + email);
+        return ResponseEntity.ok("Preferences sent to news service: " + "\n" + preferencesJson);
     }
 
     @PostMapping("/invoke")

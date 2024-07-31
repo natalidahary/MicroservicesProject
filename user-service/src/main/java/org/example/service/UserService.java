@@ -2,7 +2,6 @@ package org.example.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.dapr.client.DaprClient;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +15,6 @@ import org.example.model.User;
 import org.example.repository.UserRepository;
 import org.example.util.PasswordValidator;
 import org.springframework.stereotype.Service;
-
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -25,13 +23,13 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class UserService {
 
     private final UserRepository userRepository;
-    private final DaprClient daprClient;
     private final ObjectMapper objectMapper;
     private HttpClient httpClient;
 
@@ -88,14 +86,6 @@ public class UserService {
         userRepository.save(user);
         log.info("User registered successfully with email: {}", user.getEmail());
 
-        // Publish an event to notify other services via RabbitMQ
-        try {
-            String userJson = objectMapper.writeValueAsString(user);
-            daprClient.publishEvent("rabbitmq-pubsub", "user-registered", userJson).block();
-        } catch (Exception e) {
-            log.error("Error publishing event", e);
-        }
-
         return new UserResponse(user.getId(), user.getEmail(), user.getUsername(), user.getCategories());
     }
 
@@ -108,14 +98,6 @@ public class UserService {
         user.setCategories(preferencesRequest.categories());
         userRepository.save(user);
         log.info("Preferences updated for user ID: {}", user.getId());
-
-        // Publish an event to notify other services via RabbitMQ
-        try {
-            String userJson = objectMapper.writeValueAsString(user);
-            daprClient.publishEvent("rabbitmq-pubsub", "preferences-updated", userJson).block();
-        } catch (Exception e) {
-            log.error("Error publishing event", e);
-        }
 
         return new UserResponse(user.getId(), user.getEmail(), user.getUsername(), user.getCategories());
     }
@@ -136,14 +118,6 @@ public class UserService {
                 .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
         userRepository.delete(user);
         log.info("User deleted successfully with ID: {}", userId);
-
-        // Publish an event to notify other services via RabbitMQ
-        try {
-            String userJson = objectMapper.writeValueAsString(userId);
-            daprClient.publishEvent("rabbitmq-pubsub", "user-deleted", userJson).block();
-        } catch (Exception e) {
-            log.error("Error publishing event", e);
-        }
     }
 
 
@@ -167,7 +141,9 @@ public class UserService {
         List<String> preferences = getUserPreferences(userId);
         String email = getUserEmail(userId);
         try {
-            String preferencesJson = objectMapper.writeValueAsString(new NewsRequest(preferences, userId, email));
+            NewsRequest newsRequest = new NewsRequest(preferences, userId, email);
+            String preferencesJson = objectMapper.writeValueAsString(newsRequest);
+            log.info("Preferences JSON to be sent: {}", preferencesJson);
             invokeOtherService("news-service", "news/processPreferences", preferencesJson);
         } catch (JsonProcessingException e) {
             log.error("Error converting preferences to JSON", e);

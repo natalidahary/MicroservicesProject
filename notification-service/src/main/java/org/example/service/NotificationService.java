@@ -1,7 +1,5 @@
 package org.example.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.dapr.client.DaprClient;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -17,11 +15,9 @@ import org.springframework.stereotype.Service;
 public class NotificationService {
 
     private final JavaMailSender mailSender;
-    private final DaprClient daprClient;
-    private final ObjectMapper objectMapper;
 
     public void sendNotification(NotificationRequest notificationRequest) {
-        log.info("Sending notification to: {}", notificationRequest.email());
+        log.info("Received notification request: {}", notificationRequest);
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
@@ -33,9 +29,6 @@ public class NotificationService {
 
             mailSender.send(message);
             log.info("Notification sent successfully to: {}", notificationRequest.email());
-
-            // Publish an event to notify other services
-            daprClient.publishEvent("rabbitmq-pubsub", "notification-sent", notificationRequest).block();
         } catch (MessagingException e) {
             log.error("Error sending notification to: {}", notificationRequest.email(), e);
         }

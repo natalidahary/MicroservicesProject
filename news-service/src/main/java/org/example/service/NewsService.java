@@ -16,7 +16,6 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -34,8 +33,8 @@ public class NewsService {
 
     private final NewsRepository newsRepository;
     private final RestTemplate restTemplate;
-    private final DaprClient daprClient;
     private final ObjectMapper objectMapper;
+    private final DaprClient daprClient;
     private final HttpClient httpClient = HttpClient.newHttpClient();
 
     @Value("${newsdata.api.key}")
@@ -45,13 +44,14 @@ public class NewsService {
     private String edenaiApiKey;
 
 
-
     public void processPreferences(NewsRequest newsRequest) throws UnsupportedEncodingException {
         try {
+            log.info("Calling fetchNews with newsRequest: {}", newsRequest);
             fetchNews(newsRequest);
+            log.info("Successfully fetched news for newsRequest: {}", newsRequest);
         } catch (Exception e) {
-            log.error("Error processing preferences: {}", newsRequest, e);
-            throw e; // or handle it as needed
+            log.error("Error processing preferences for newsRequest: {}", newsRequest, e);
+            throw e;
         }
     }
 
@@ -142,7 +142,10 @@ public class NewsService {
         String notificationJson;
         try {
             notificationJson = objectMapper.writeValueAsString(notificationRequest);
-            invokeOtherService("notification-service", "notifications/sendNotification", notificationJson);
+            byte[] notificationBytes = notificationJson.getBytes();
+            daprClient.invokeBinding("notificationqueue", "create", notificationBytes).block();
+            log.info("Notification sent to notificationQueue");
+            invokeOtherService("notification-service", "notifications/notificationqueue", notificationJson);
         } catch (JsonProcessingException e) {
             log.error("Error converting notification request to JSON", e);
         }

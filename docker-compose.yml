@@ -19,14 +19,12 @@ services:
       - "15672:15672"
     networks:
       - microservices-network
+    healthcheck:
+      test: [ "CMD-SHELL", "rabbitmqctl status" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
-  redis:
-    image: redis:alpine
-    container_name: redis
-    ports:
-      - "6379:6379"
-    networks:
-      - microservices-network
 
   user-service:
     build:
@@ -36,11 +34,18 @@ services:
       - "8081:8081"
     environment:
       - SPRING_DATA_MONGODB_URI=mongodb://mymongodb:27017/users
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=guest
+      - SPRING_RABBITMQ_PASSWORD=guest
       - DAPR_HTTP_PORT=3500
       - DAPR_HTTP_ENDPOINT=http://localhost:3500
+      - DAPR_PROTOCOL=http
     depends_on:
-      - mymongodb
-      - rabbitmq
+      rabbitmq:
+        condition: service_healthy
+      mymongodb:
+        condition: service_started
     networks:
       - microservices-network
 
@@ -76,13 +81,20 @@ services:
       - "8082:8082"
     environment:
       - SPRING_DATA_MONGODB_URI=mongodb://mymongodb:27017/news
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=guest
+      - SPRING_RABBITMQ_PASSWORD=guest
       - DAPR_HTTP_PORT=3501
       - DAPR_HTTP_ENDPOINT=http://localhost:3501
+      - DAPR_PROTOCOL=http
       - NEWSDATA_API_KEY=pub_4833216be0d3292a2c069cfc95c63b71c830a
       - EDENAI_API_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiM2U0Mjk0OWUtNjY5OC00ZjgxLWJkMWYtZmI5ODBkNjNjNGE1IiwidHlwZSI6ImZyb250X2FwaV90b2tlbiJ9.HzZsduh88XIKEueoM6YLc7zMT6aOD3rZVYhsanzr7jI
     depends_on:
-      - mymongodb
-      - rabbitmq
+      rabbitmq:
+        condition: service_healthy
+      mymongodb:
+        condition: service_started
     networks:
       - microservices-network
 
@@ -117,16 +129,23 @@ services:
     ports:
       - "8083:8083"
     environment:
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=guest
+      - SPRING_RABBITMQ_PASSWORD=guest
       - DAPR_HTTP_PORT=3502
       - DAPR_HTTP_ENDPOINT=http://localhost:3502
+      - DAPR_PROTOCOL=http
       - SPRING_MAIL_HOST=sandbox.smtp.mailtrap.io
       - SPRING_MAIL_PORT=2525
-      - SPRING_MAIL_USERNAME=8b8d57525b570a
-      - SPRING_MAIL_PASSWORD=d3b22b800e0161
+      - SPRING_MAIL_USERNAME=56187ab4c1507c
+      - SPRING_MAIL_PASSWORD=1b825ca9d763b0
       - SPRING_MAIL_FROM=no-reply@example.com
     depends_on:
-      - mymongodb
-      - rabbitmq
+      rabbitmq:
+        condition: service_healthy
+      mymongodb:
+        condition: service_started
     networks:
       - microservices-network
 
